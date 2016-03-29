@@ -15,24 +15,24 @@ public class Board2d<T> implements GameState {
         this.board = board;
     }
 
-    public List<Sequence<T>> rows() {
-        List<Sequence<T>> result = new ArrayList<>();
+    public List<Line<T>> rows() {
+        List<Line<T>> result = new ArrayList<>();
         for (int i = 0; i < board.length; i++) {
             T[] row = board[i];
-            result.add(new Sequence<>(i, Arrays.asList(row)));
+            result.add(new Line<>(i, Arrays.asList(row)));
         }
         return result;
     }
 
-    public List<Sequence<T>> columns() {
+    public List<Line<T>> columns() {
         int columns = board[0].length;
-        List<Sequence<T>> result = new ArrayList<>();
+        List<Line<T>> result = new ArrayList<>();
         for (int i = 0; i < columns; i++) {
             List<T> column = new ArrayList<>();
             for (T[] aBoard : board) {
                 column.add(aBoard[i]);
             }
-            result.add(new Sequence<>(i, column));
+            result.add(new Line<>(i, column));
         }
         return result;
     }
@@ -68,11 +68,11 @@ public class Board2d<T> implements GameState {
         return String.join("\n", lines);
     }
 
-    public static class Sequence<T> {
+    public static class Line<T> {
         public final int orderNumber;
         private final List<T> tiles;
 
-        public Sequence(int orderNumber, List<T> tiles) {
+        public Line(int orderNumber, List<T> tiles) {
             this.orderNumber = orderNumber;
             this.tiles = tiles;
         }
@@ -86,9 +86,9 @@ public class Board2d<T> implements GameState {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
 
-            Sequence sequence = (Sequence) o;
+            Line line = (Line) o;
 
-            return tiles.equals(sequence.tiles);
+            return tiles.equals(line.tiles);
         }
 
         @Override

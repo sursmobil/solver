@@ -3,7 +3,7 @@ package landscaper;
 import solver.RuleSet;
 import solver.Solver;
 import solver.utils.Board2d;
-import solver.utils.Board2d.Sequence;
+import solver.utils.Board2d.Line;
 
 import java.util.*;
 import java.util.function.BooleanSupplier;
@@ -23,9 +23,9 @@ public class Rules implements RuleSet<Board2d<Tile>>{
         return checkSequences(state.rows()) && checkSequences(state.columns());
     }
 
-    private boolean checkSequences(List<Sequence<Tile>> sequences) {
+    private boolean checkSequences(List<Line<Tile>> lines) {
         BooleanSupplier singleCheckF = () -> {
-            for(Sequence<Tile> s : sequences) {
+            for(Line<Tile> s : lines) {
                 boolean consecutive = noMoreThenTwoConsecutive(s);
                 boolean nOfTiles = validNumberOfTiles(s);
                 if(!consecutive || !nOfTiles) {
@@ -34,26 +34,26 @@ public class Rules implements RuleSet<Board2d<Tile>>{
             }
             return true;
         };
-        boolean duplicates = noDuplicateSequence(sequences);
+        boolean duplicates = noDuplicateSequence(lines);
         boolean singleCheck =  singleCheckF.getAsBoolean();
         return duplicates && singleCheck;
     }
 
-    private boolean noDuplicateSequence(List<Sequence<Tile>> sequences) {
-        List<Sequence> filled = sequences.stream()
+    private boolean noDuplicateSequence(List<Line<Tile>> lines) {
+        List<Line> filled = lines.stream()
                 .filter(s -> s.count(null) == 0)
                 .collect(Collectors.toList());
-        Set<Sequence> unique = new HashSet<>(filled);
+        Set<Line> unique = new HashSet<>(filled);
         return unique.size() == filled.size();
     }
 
-    private boolean validNumberOfTiles(Sequence<Tile> s) {
+    private boolean validNumberOfTiles(Line<Tile> s) {
         int max = s.tiles().size()/2;
         Function<Tile, Boolean> validNumberOf = expected -> s.count(expected) <= max;
         return validNumberOf.apply(Tile.flower) && validNumberOf.apply(tree);
     }
 
-    private boolean noMoreThenTwoConsecutive(Sequence<Tile> s) {
+    private boolean noMoreThenTwoConsecutive(Line<Tile> s) {
         for(int i = 0; i < s.tiles().size()-2; i++) {
             if(s.tiles().get(i) != null && s.tiles().get(i) == s.tiles().get(i+1) && s.tiles().get(i) == s.tiles().get(i+2)) return false;
         }
@@ -67,7 +67,7 @@ public class Rules implements RuleSet<Board2d<Tile>>{
 
     @Override
     public Collection<Board2d<Tile>> singleProblemAlternatives(Board2d<Tile> state) {
-        Sequence<Tile> row = state.rows().stream()
+        Line<Tile> row = state.rows().stream()
                 .filter(r -> r.tiles().contains(null))
                 .sorted((r1, r2) -> Long.compare(r1.count(null), r1.count(null)))
                 .findFirst()
@@ -79,7 +79,7 @@ public class Rules implements RuleSet<Board2d<Tile>>{
         return createAlternatives(state, row, perms);
     }
 
-    private Collection<Board2d<Tile>> createAlternatives(Board2d<Tile> state, Sequence<Tile> row, List<Tile[]> perms) {
+    private Collection<Board2d<Tile>> createAlternatives(Board2d<Tile> state, Line<Tile> row, List<Tile[]> perms) {
         return perms.stream().map(perm -> {
             Board2d<Tile> copy = state.freeze();
             int p = 0;
