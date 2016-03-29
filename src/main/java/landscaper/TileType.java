@@ -1,5 +1,5 @@
 package landscaper;
 
-public enum Tile {
+public enum TileType {
     tree, flower
 }

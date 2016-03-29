@@ -15,24 +15,28 @@ public class Board2d<T> implements GameState {
         this.board = board;
     }
 
-    public List<Area<T>> rows() {
-        List<Area<T>> result = new ArrayList<>();
-        for (int i = 0; i < board.length; i++) {
-            T[] row = board[i];
-            result.add(new Area<>(i, Arrays.asList(row)));
+    public List<Line<T>> rows() {
+        List<Line<T>> result = new ArrayList<>();
+        for (int r = 0; r < board.length; r++) {
+            T[] row = board[r];
+            List<Tile<T, Point2d>> rowResult = new ArrayList<>();
+            for (int c = 0; c < row.length; c++) {
+                rowResult.add(tile(row[c], r, c));
+            }
+            result.add(new Line<T>(rowResult, r));
         }
         return result;
     }
 
-    public List<Area<T>> columns() {
+    public List<Line<T>> columns() {
         int columns = board[0].length;
-        List<Area<T>> result = new ArrayList<>();
+        List<Line<T>> result = new ArrayList<>();
         for (int i = 0; i < columns; i++) {
-            List<T> column = new ArrayList<>();
-            for (T[] aBoard : board) {
-                column.add(aBoard[i]);
+            List<Tile<T, Point2d>> column = new ArrayList<>();
+            for (int y = 0; y < board.length; y++) {
+                column.add(tile(board[i][y], i, y));
             }
-            result.add(new Area<>(i, column));
+            result.add(new Line<>(column, i));
         }
         return result;
     }
@@ -51,7 +55,7 @@ public class Board2d<T> implements GameState {
     }
 
     @SuppressWarnings("unchecked")
-    public Board2d<T> freeze() {
+    public Board2d<T> copy() {
         T[][] newBoard = (T[][]) Array.newInstance(board.getClass().getComponentType(), board.length);
         for (int i = 0; i < board.length; i++) {
             newBoard[i] = Arrays.copyOf(board[i], board[i].length);
@@ -66,6 +70,19 @@ public class Board2d<T> implements GameState {
             lines.add(Arrays.toString(row));
         }
         return String.join("\n", lines);
+    }
+
+    public static class Line<T> extends Area<T, Point2d> {
+        public final int order;
+
+        public Line(List<Tile<T, Point2d>> tiles, int order) {
+            super(tiles);
+            this.order = order;
+        }
+    }
+
+    private Tile<T, Point2d> tile(T content, int row, int column) {
+        return new Tile<>(content, new Point2d(row, column));
     }
 
 }

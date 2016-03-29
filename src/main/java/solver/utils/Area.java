@@ -5,16 +5,14 @@ import java.util.List;
 /**
  * Created by CJ on 29/03/2016.
  */
-public class Area<T> {
-    public final int orderNumber;
-    private final List<T> tiles;
+public class Area<T, P> {
+    private final List<Tile<T, P>> tiles;
 
-    public Area(int orderNumber, List<T> tiles) {
-        this.orderNumber = orderNumber;
+    public Area(List<Tile<T, P>> tiles) {
         this.tiles = tiles;
     }
 
-    public List<T> tiles() {
+    public List<Tile<T, P>> tiles() {
         return tiles;
     }
 
@@ -35,7 +33,7 @@ public class Area<T> {
 
     @Override
     public String toString() {
-        return orderNumber + " : " + tiles;
+        return tiles.toString();
     }
 
     public long count(T expected) {
