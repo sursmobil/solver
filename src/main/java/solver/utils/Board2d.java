@@ -15,24 +15,24 @@ public class Board2d<T> implements GameState {
         this.board = board;
     }
 
-    public List<Line<T>> rows() {
-        List<Line<T>> result = new ArrayList<>();
+    public List<Area<T>> rows() {
+        List<Area<T>> result = new ArrayList<>();
         for (int i = 0; i < board.length; i++) {
             T[] row = board[i];
-            result.add(new Line<>(i, Arrays.asList(row)));
+            result.add(new Area<>(i, Arrays.asList(row)));
         }
         return result;
     }
 
-    public List<Line<T>> columns() {
+    public List<Area<T>> columns() {
         int columns = board[0].length;
-        List<Line<T>> result = new ArrayList<>();
+        List<Area<T>> result = new ArrayList<>();
         for (int i = 0; i < columns; i++) {
             List<T> column = new ArrayList<>();
             for (T[] aBoard : board) {
                 column.add(aBoard[i]);
             }
-            result.add(new Line<>(i, column));
+            result.add(new Area<>(i, column));
         }
         return result;
     }
@@ -66,44 +66,6 @@ public class Board2d<T> implements GameState {
             lines.add(Arrays.toString(row));
         }
         return String.join("\n", lines);
-    }
-
-    public static class Line<T> {
-        public final int orderNumber;
-        private final List<T> tiles;
-
-        public Line(int orderNumber, List<T> tiles) {
-            this.orderNumber = orderNumber;
-            this.tiles = tiles;
-        }
-
-        public List<T> tiles() {
-            return tiles;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            Line line = (Line) o;
-
-            return tiles.equals(line.tiles);
-        }
-
-        @Override
-        public int hashCode() {
-            return tiles.hashCode();
-        }
-
-        @Override
-        public String toString() {
-            return orderNumber + " : " + tiles;
-        }
-
-        public long count(T expected) {
-            return tiles.stream().filter(t -> t == expected).count();
-        }
     }
 
 }
