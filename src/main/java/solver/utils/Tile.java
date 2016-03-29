@@ -11,4 +11,20 @@ public class Tile<T, P> {
         this.content = content;
         this.position = position;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Tile<?, ?> tile = (Tile<?, ?>) o;
+
+        return !(content != null ? !content.equals(tile.content) : tile.content != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        return content != null ? content.hashCode() : 0;
+    }
 }

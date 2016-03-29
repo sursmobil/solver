@@ -15,6 +15,22 @@ public class Board2d<T> implements GameState {
         this.board = board;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Board2d<?> board2d = (Board2d<?>) o;
+
+        return Arrays.deepEquals(board, board2d.board);
+
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.deepHashCode(board);
+    }
+
     public List<Line<T>> rows() {
         List<Line<T>> result = new ArrayList<>();
         for (int r = 0; r < board.length; r++) {
@@ -23,7 +39,7 @@ public class Board2d<T> implements GameState {
             for (int c = 0; c < row.length; c++) {
                 rowResult.add(tile(row[c], r, c));
             }
-            result.add(new Line<T>(rowResult, r));
+            result.add(new Line<>(rowResult, r));
         }
         return result;
     }
@@ -31,12 +47,12 @@ public class Board2d<T> implements GameState {
     public List<Line<T>> columns() {
         int columns = board[0].length;
         List<Line<T>> result = new ArrayList<>();
-        for (int i = 0; i < columns; i++) {
+        for (int c = 0; c < columns; c++) {
             List<Tile<T, Point2d>> column = new ArrayList<>();
-            for (int y = 0; y < board.length; y++) {
-                column.add(tile(board[i][y], i, y));
+            for (int r = 0; r < board.length; r++) {
+                column.add(tile(board[r][c], r, c));
             }
-            result.add(new Line<>(column, i));
+            result.add(new Line<>(column, c));
         }
         return result;
     }
@@ -78,6 +94,10 @@ public class Board2d<T> implements GameState {
         public Line(List<Tile<T, Point2d>> tiles, int order) {
             super(tiles);
             this.order = order;
+        }
+
+        public Tile<T, Point2d> get(int i) {
+            return tiles().get(i);
         }
     }
 

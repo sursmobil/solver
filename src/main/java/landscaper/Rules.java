@@ -5,6 +5,7 @@ import solver.Solver;
 import solver.utils.Board2d;
 import solver.utils.Area;
 import solver.utils.Board2d.Line;
+import solver.utils.Tile;
 
 import java.util.*;
 import java.util.function.BooleanSupplier;
@@ -56,7 +57,10 @@ public class Rules implements RuleSet<Board2d<TileType>>{
 
     private boolean noMoreThenTwoConsecutive(Line<TileType> s) {
         for(int i = 0; i < s.size()-2; i++) {
-            if(s.tiles().get(i) != null && s.tiles().get(i) == s.tiles().get(i+1) && s.tiles().get(i) == s.tiles().get(i+2)) return false;
+            Tile<TileType, ?> current = s.get(i);
+            Tile<TileType, ?> next = s.get(i+1);
+            Tile<TileType, ?> next2 = s.get(i+2);
+            if(current.content != null && current.content.equals(next.content) && current.content.equals(next2.content)) return false;
         }
         return true;
     }
@@ -69,7 +73,7 @@ public class Rules implements RuleSet<Board2d<TileType>>{
     @Override
     public Collection<Board2d<TileType>> singleProblemAlternatives(Board2d<TileType> state) {
         Line<TileType> row = state.rows().stream()
-                .filter(r -> r.tiles().contains(null))
+                .filter(r -> r.contains(null))
                 .sorted((r1, r2) -> Long.compare(r1.count(null), r1.count(null)))
                 .findFirst()
                 .get();
@@ -85,12 +89,13 @@ public class Rules implements RuleSet<Board2d<TileType>>{
             Board2d<TileType> copy = state.copy();
             int p = 0;
             for (int i = 0; i < row.size(); i++) {
-                if (row.tiles().get(i) == null) {
+                if (row.get(i).content == null) {
                     copy.set(row.order, i, perm[p]);
                     p++;
                 }
             }
             return copy;
+
         }).collect(Collectors.toList());
     }
 

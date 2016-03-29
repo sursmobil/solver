@@ -16,6 +16,11 @@ public class Area<T, P> {
         return tiles;
     }
 
+    public boolean contains(T content) {
+        return tiles().stream()
+                .anyMatch(t -> t.content == content);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -37,7 +42,7 @@ public class Area<T, P> {
     }
 
     public long count(T expected) {
-        return tiles.stream().filter(t -> t == expected).count();
+        return tiles.stream().filter(t -> t.content == expected).count();
     }
 
     public int size() {
