@@ -2,88 +2,89 @@ package landscaper;
 
 import solver.RuleSet;
 import solver.Solver;
+import solver.utils.Board2d;
+import solver.utils.Board2d.Sequence;
 
 import java.util.*;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static landscaper.Tile.empty;
-import static landscaper.Tile.flower;
-import static landscaper.Tile.tree;
+import static landscaper.Tile.*;
 
-public class Rules implements RuleSet<State>{
+public class Rules implements RuleSet<Board2d<Tile>>{
     @Override
-    public boolean solve(State state) {
+    public boolean solve(Board2d<Tile> state) {
         return false;
     }
 
     @Override
-    public boolean verify(State state) {
-        boolean res = checkSequences(state.rows()) && checkSequences(state.columns());
-        return res;
+    public boolean verify(Board2d<Tile> state) {
+        return checkSequences(state.rows()) && checkSequences(state.columns());
     }
 
-    private boolean checkSequences(List<State.Sequence> sequences) {
-        BooleanSupplier singleCheck = () -> {
-            for(State.Sequence s : sequences) {
-                if(!noMoreThenTwoConsecutive(s.tiles()) || !validNumberOfTiles(s.tiles())) {
+    private boolean checkSequences(List<Sequence<Tile>> sequences) {
+        BooleanSupplier singleCheckF = () -> {
+            for(Sequence<Tile> s : sequences) {
+                boolean consecutive = noMoreThenTwoConsecutive(s);
+                boolean nOfTiles = validNumberOfTiles(s);
+                if(!consecutive || !nOfTiles) {
                     return false;
                 }
             }
             return true;
         };
-        return noDuplicateSequence(sequences) && singleCheck.getAsBoolean();
+        boolean duplicates = noDuplicateSequence(sequences);
+        boolean singleCheck =  singleCheckF.getAsBoolean();
+        return duplicates && singleCheck;
     }
 
-    private boolean noDuplicateSequence(List<State.Sequence> sequences) {
-        Set<State.Sequence> unique = new HashSet<>(sequences);
-        return unique.size() == sequences.size();
+    private boolean noDuplicateSequence(List<Sequence<Tile>> sequences) {
+        List<Sequence> filled = sequences.stream()
+                .filter(s -> s.count(null) == 0)
+                .collect(Collectors.toList());
+        Set<Sequence> unique = new HashSet<>(filled);
+        return unique.size() == filled.size();
     }
 
-    private boolean validNumberOfTiles(List<Tile> s) {
-        int max = s.size()/2;
-        Function<Tile, Boolean> validNumberOf = expected ->
-            s.stream().filter(t -> t == expected).count() <= max;
+    private boolean validNumberOfTiles(Sequence<Tile> s) {
+        int max = s.tiles().size()/2;
+        Function<Tile, Boolean> validNumberOf = expected -> s.count(expected) <= max;
         return validNumberOf.apply(Tile.flower) && validNumberOf.apply(tree);
     }
 
-    private boolean noMoreThenTwoConsecutive(List<Tile> s) {
-        for(int i = 0; i < s.size()-2; i++) {
-            if(s.get(i) != Tile.empty && s.get(i) == s.get(i+1) && s.get(1) == s.get(i+2)) return false;
+    private boolean noMoreThenTwoConsecutive(Sequence<Tile> s) {
+        for(int i = 0; i < s.tiles().size()-2; i++) {
+            if(s.tiles().get(i) != null && s.tiles().get(i) == s.tiles().get(i+1) && s.tiles().get(i) == s.tiles().get(i+2)) return false;
         }
         return true;
     }
 
     @Override
-    public boolean isComplete(State state) {
+    public boolean isComplete(Board2d state) {
         return state.isFilled();
     }
 
     @Override
-    public Collection<State> singleProblemAlternatives(State state) {
-        State.Sequence row = state.rows().stream()
-                .filter(r -> r.tiles().contains(Tile.empty))
-                .sorted((r1, r2) -> Long.compare(count(r1, empty), count(r2, empty)))
+    public Collection<Board2d<Tile>> singleProblemAlternatives(Board2d<Tile> state) {
+        Sequence<Tile> row = state.rows().stream()
+                .filter(r -> r.tiles().contains(null))
+                .sorted((r1, r2) -> Long.compare(r1.count(null), r1.count(null)))
                 .findFirst()
                 .get();
-        long trees = count(row, tree);
-        long flowers = count(row, flower);
+        long trees = row.count(tree);
+        long flowers = row.count(flower);
         long max = row.tiles().size()/2;
         List<Tile[]> perms = permutations(max-trees, max-flowers);
         return createAlternatives(state, row, perms);
     }
 
-    private long count(State.Sequence s, Tile expected) {
-        return s.tiles().stream().filter(t -> t == expected).count();
-    }
-
-    private Collection<State> createAlternatives(State state, State.Sequence row, List<Tile[]> perms) {
+    private Collection<Board2d<Tile>> createAlternatives(Board2d<Tile> state, Sequence<Tile> row, List<Tile[]> perms) {
         return perms.stream().map(perm -> {
-            State copy = state.freeze();
+            Board2d<Tile> copy = state.freeze();
             int p = 0;
             for (int i = 0; i < row.tiles().size(); i++) {
-                if (row.tiles().get(i) == Tile.empty) {
+                if (row.tiles().get(i) == null) {
                     copy.set(row.orderNumber, i, perm[p]);
                     p++;
                 }
@@ -122,15 +123,14 @@ public class Rules implements RuleSet<State>{
 
     public static void main(String... args) {
         Tile[][] board = new Tile[][]{
-                new Tile[]{empty, flower, empty, empty},
-                new Tile[]{flower, tree, empty, tree},
-                new Tile[]{empty, empty, empty, empty},
-                new Tile[]{tree, flower, empty, empty}
+                new Tile[]{null, flower, null, null},
+                new Tile[]{flower, tree, null, tree},
+                new Tile[]{null, null, null, null},
+                new Tile[]{tree, flower, null, null}
         };
-        State s = new State(board);
+        Board2d<Tile> s = new Board2d<>(board);
         Rules r = new Rules();
-        Solver<State> solver = new Solver<>(r);
-        Collection<State> states = r.singleProblemAlternatives(s);
+        Solver<Board2d<Tile>> solver = new Solver<>(r);
         System.out.println(solver.solve(s));
     }
 }
