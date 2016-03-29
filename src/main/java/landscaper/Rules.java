@@ -1,18 +1,19 @@
 package landscaper;
 
 import solver.RuleSet;
-import solver.Solver;
-import solver.utils.Board2d;
-import solver.utils.Area;
+import solver.utils.*;
 import solver.utils.Board2d.Line;
-import solver.utils.Tile;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static landscaper.TileType.*;
+import static landscaper.TileType.flower;
+import static landscaper.TileType.tree;
 
 public class Rules implements RuleSet<Board2d<TileType>>{
     @Override
@@ -80,63 +81,19 @@ public class Rules implements RuleSet<Board2d<TileType>>{
         long trees = row.count(tree);
         long flowers = row.count(flower);
         long max = row.size()/2;
-        List<TileType[]> perms = permutations(max-trees, max-flowers);
+        Collection<TileType[]> perms = permutations(max-trees, max-flowers);
         return createAlternatives(state, row, perms);
     }
 
-    private Collection<Board2d<TileType>> createAlternatives(Board2d<TileType> state, Line<TileType> row, List<TileType[]> perms) {
-        return perms.stream().map(perm -> {
-            Board2d<TileType> copy = state.copy();
-            int p = 0;
-            for (int i = 0; i < row.size(); i++) {
-                if (row.get(i).content == null) {
-                    copy.set(row.order, i, perm[p]);
-                    p++;
-                }
-            }
-            return copy;
-
-        }).collect(Collectors.toList());
+    private Collection<Board2d<TileType>> createAlternatives(Board2d<TileType> state, Line<TileType> row, Collection<TileType[]> perms) {
+        return Utils.createAlternatives(perms, state::copy, (gs, t, p) -> gs.set(p.row, p.column, t), row);
     }
 
-    private List<TileType[]> permutations(long trees, long flowers) {
-        return permutations(new TileType[(int) (trees + flowers)], 0, trees, flowers);
+    private Collection<TileType[]> permutations(long trees, long flowers) {
+        return Permutations.noRepetition(TileType.class)
+                .withInstance(tree, (int) trees)
+                .withInstance(flower, (int) flowers)
+                .get();
     }
 
-    private List<TileType[]> permutations(TileType[] base, int i, long trees, long flowers) {
-        if(trees == 0) {
-            for(int y = 0; y < flowers; y++) {
-                base[i+y] = TileType.flower;
-            }
-            return Arrays.<TileType[]>asList(base);
-        } else if(flowers == 0) {
-            for(int y = 0; y < trees; y++) {
-                base[i+y] = tree;
-            }
-            return Arrays.<TileType[]>asList(base);
-        } else {
-            TileType[] treeBase = new TileType[base.length];
-            System.arraycopy(base, 0, treeBase, 0, base.length);
-            treeBase[i] = tree;
-            TileType[] flowerBase = new TileType[base.length];
-            System.arraycopy(base, 0, flowerBase, 0, base.length);
-            flowerBase[i] = TileType.flower;
-            List<TileType[]> result = new ArrayList<>(permutations(treeBase, i+1, trees-1, flowers));
-            result.addAll(permutations(flowerBase, i+1, trees, flowers-1));
-            return result;
-        }
-    }
-
-    public static void main(String... args) {
-        TileType[][] board = new TileType[][]{
-                new TileType[]{null, flower, null, null},
-                new TileType[]{flower, tree, null, tree},
-                new TileType[]{null, null, null, null},
-                new TileType[]{tree, flower, null, null}
-        };
-        Board2d<TileType> s = new Board2d<>(board);
-        Rules r = new Rules();
-        Solver<Board2d<TileType>> solver = new Solver<>(r);
-        System.out.println(solver.solve(s));
-    }
 }

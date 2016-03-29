@@ -18,7 +18,11 @@ public class Iteration<GS extends GameState> {
      * @return solved game state, empty otherwise
      */
     public Optional<GS> solve() {
-        while(rules.solve(state));
+        while(rules.solve(state)){
+            if(!rules.verify(state)) {
+                return Optional.empty();
+            }
+        }
         if(!rules.isComplete(state)) {
             return makeAssumption();
         } else {

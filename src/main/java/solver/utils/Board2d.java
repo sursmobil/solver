@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static java.lang.Integer.max;
+import static java.lang.Math.min;
+
 public class Board2d<T> implements GameState {
 
     private final T[][] board;
@@ -33,10 +36,10 @@ public class Board2d<T> implements GameState {
 
     public List<Line<T>> rows() {
         List<Line<T>> result = new ArrayList<>();
-        for (int r = 0; r < board.length; r++) {
+        for (int r = 0; r < nOfRows(); r++) {
             T[] row = board[r];
             List<Tile<T, Point2d>> rowResult = new ArrayList<>();
-            for (int c = 0; c < row.length; c++) {
+            for (int c = 0; c < nOfColumns(); c++) {
                 rowResult.add(tile(row[c], r, c));
             }
             result.add(new Line<>(rowResult, r));
@@ -45,16 +48,43 @@ public class Board2d<T> implements GameState {
     }
 
     public List<Line<T>> columns() {
-        int columns = board[0].length;
         List<Line<T>> result = new ArrayList<>();
-        for (int c = 0; c < columns; c++) {
+        for (int c = 0; c < nOfColumns(); c++) {
             List<Tile<T, Point2d>> column = new ArrayList<>();
-            for (int r = 0; r < board.length; r++) {
+            for (int r = 0; r < nOfRows(); r++) {
                 column.add(tile(board[r][c], r, c));
             }
             result.add(new Line<>(column, c));
         }
         return result;
+    }
+
+    public List<Tile<T, Point2d>> tiles() {
+        List<Tile<T, Point2d>> result = new ArrayList<>();
+        for (int r = 0; r < nOfRows(); r++) {
+            for (int c = 0; c < nOfColumns(); c++) {
+                result.add(tile(board[r][c], r, c));
+            }
+        }
+        return result;
+    }
+
+    public int nOfRows() {
+        return board.length;
+    }
+
+    public int nOfColumns() {
+        return board[0].length;
+    }
+
+    public Area<T, Point2d> around(Point2d point) {
+        List<Tile<T, Point2d>> result = new ArrayList<>();
+        for (int r = max(point.row-1, 0); r <= min(point.row+1, nOfRows()-1); r++) {
+            for (int c = max(point.column-1, 0); c <= min(point.column+1, nOfColumns()-1); c++) {
+                result.add(tile(board[r][c], r, c));
+            }
+        }
+        return new Area<>(result);
     }
 
     public boolean isFilled() {
@@ -73,7 +103,7 @@ public class Board2d<T> implements GameState {
     @SuppressWarnings("unchecked")
     public Board2d<T> copy() {
         T[][] newBoard = (T[][]) Array.newInstance(board.getClass().getComponentType(), board.length);
-        for (int i = 0; i < board.length; i++) {
+        for (int i = 0; i < nOfRows(); i++) {
             newBoard[i] = Arrays.copyOf(board[i], board[i].length);
         }
         return new Board2d<>(newBoard);
